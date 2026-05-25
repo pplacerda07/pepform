@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { QuizStep, QuizAnswers, ObjectiveType, ExperienceType } from '@/types/quiz';
 import { questions } from '@/lib/questions';
@@ -147,7 +147,7 @@ export default function QuizContainer() {
   const [showIntro, setShowIntro] = useState(true);
   const [currentStep, setCurrentStep] = useState<QuizStep>('gate');
   const [answers, setAnswers] = useState<QuizAnswers>(getInitialAnswers());
-  const [stepHistory, setStepHistory] = useState<QuizStep[]>(['gate']);
+  const [, setStepHistory] = useState<QuizStep[]>(['gate']);
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationClass, setAnimationClass] = useState('animate-in');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -176,13 +176,21 @@ export default function QuizContainer() {
     if (nextStep === 'final') {
       setIsSubmitting(true);
       try {
-        await fetch('/api/submit', {
+        const payload = { ...answers, data_envio: new Date().toISOString() };
+        console.log('[FrostForm] Submetendo:', payload);
+        const resp = await fetch('/api/submit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...answers, data_envio: new Date().toISOString() }),
+          body: JSON.stringify(payload),
         });
+        const json = await resp.json();
+        if (!resp.ok || !json.success) {
+          console.error('[FrostForm] Falha na submissão:', json);
+        } else {
+          console.log('[FrostForm] Salvo na planilha:', json.message);
+        }
       } catch (err) {
-        console.error('Submission error:', err);
+        console.error('[FrostForm] Erro de rede:', err);
       } finally {
         setIsSubmitting(false);
       }
@@ -222,10 +230,10 @@ export default function QuizContainer() {
 
   const handleSingleSelect = useCallback(
     (field: keyof QuizAnswers, value: string) => {
-      setAnswers((prev) => ({ ...prev, [field]: value }));
+      const updated = { ...answers, [field]: value };
+      setAnswers(updated);
+      const nextStep = getNextStep(currentStep, updated);
       setTimeout(() => {
-        const updated = { ...answers, [field]: value };
-        const nextStep = getNextStep(currentStep, updated);
         setIsAnimating(true);
         setAnimationClass('animate-out');
         setTimeout(() => {
@@ -233,7 +241,6 @@ export default function QuizContainer() {
           setStepHistory((prev) => [...prev, nextStep]);
           setAnimationClass('animate-in');
           setErrors({});
-          setAnswers(updated);
           setTimeout(() => setIsAnimating(false), 400);
         }, 250);
       }, 300);
