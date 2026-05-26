@@ -2,6 +2,12 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import Image from 'next/image';
+
+declare global {
+  interface Window {
+    fbq?: (...args: unknown[]) => void;
+  }
+}
 import { QuizStep, QuizAnswers, ObjectiveType, ExperienceType } from '@/types/quiz';
 import { questions } from '@/lib/questions';
 import {
@@ -188,6 +194,13 @@ export default function QuizContainer() {
           console.error('[FrostForm] Falha na submissão:', json);
         } else {
           console.log('[FrostForm] Salvo na planilha:', json.message);
+          if (typeof window !== 'undefined' && window.fbq) {
+            window.fbq('track', 'Lead', {
+              content_name: 'Frost Peptideos Form',
+              content_category: answers.perfil,
+            });
+            console.log('[FrostForm] Meta Pixel: Lead disparado');
+          }
         }
       } catch (err) {
         console.error('[FrostForm] Erro de rede:', err);
