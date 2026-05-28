@@ -460,7 +460,22 @@ export default function QuizContainer() {
         );
 
       case 'final':
-        return <FinalScreen key="final" />;
+        return (
+          <FinalScreen
+            key="final"
+            answers={answers}
+            onReject={() => {
+              setIsAnimating(true);
+              setAnimationClass('animate-out');
+              setTimeout(() => {
+                setCurrentStep('rejected');
+                setStepHistory((prev) => [...prev, 'rejected']);
+                setAnimationClass('animate-in');
+                setTimeout(() => setIsAnimating(false), 400);
+              }, 250);
+            }}
+          />
+        );
 
       case 'rejected':
         return <RejectionScreen key="rejected" onRestart={handleRestart} />;
