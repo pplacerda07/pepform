@@ -195,11 +195,11 @@ export default function QuizContainer() {
         } else {
           console.log('[FrostForm] Salvo na planilha:', json.message);
           if (typeof window !== 'undefined' && window.fbq) {
-            window.fbq('track', 'Lead', {
+            window.fbq('track', 'CompleteRegistration', {
               content_name: 'Frost Peptideos Form',
               content_category: answers.perfil,
             });
-            console.log('[FrostForm] Meta Pixel: Lead disparado');
+            console.log('[FrostForm] Meta Pixel: CompleteRegistration disparado');
           }
         }
       } catch (err) {
