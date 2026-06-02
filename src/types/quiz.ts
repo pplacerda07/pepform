@@ -5,11 +5,14 @@
 export type QuizStep =
   | 'gate'
   | 'name'
-  | 'whatsapp'
   | 'profile'
   | 'objectives'
   | 'experience'
   | 'reseller'
+  | 'info-origem'
+  | 'info-frete'
+  | 'info-prazo'
+  | 'info-alfandega'
   | 'final'
   | 'rejected';
 

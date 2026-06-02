@@ -8,8 +8,8 @@ declare global {
     fbq?: (...args: unknown[]) => void;
   }
 }
-import { QuizStep, QuizAnswers, ObjectiveType, ExperienceType } from '@/types/quiz';
-import { questions } from '@/lib/questions';
+import { QuizStep, QuizAnswers, ObjectiveType } from '@/types/quiz';
+import { questions, infoCards } from '@/lib/questions';
 import {
   getNextStep,
   getPreviousStep,
@@ -23,7 +23,6 @@ import ProgressBar from './ProgressBar';
 import SingleChoice from './SingleChoice';
 import MultiSelect from './MultiSelect';
 import TextInput from './TextInput';
-import PhoneInput from './PhoneInput';
 import FinalScreen from './FinalScreen';
 import RejectionScreen from './RejectionScreen';
 
@@ -377,7 +376,7 @@ export default function QuizContainer() {
             <SingleChoice
               options={question.options!}
               selected={answers.experiencia}
-              onSelect={(value) => handleSingleSelect('experiencia', value as ExperienceType)}
+              onSelect={(value) => handleSingleSelect('experiencia', value)}
             />
             <div className="nav-buttons" style={{ marginTop: 'var(--space-md)' }}>
               <button className="btn btn-back" onClick={handleBack} type="button" aria-label="Voltar">
@@ -421,18 +420,23 @@ export default function QuizContainer() {
           </div>
         );
 
-      case 'whatsapp':
+      case 'info-origem':
+      case 'info-frete':
+      case 'info-prazo':
+      case 'info-alfandega': {
+        const card = infoCards[currentStep];
+        const isLastInfo = currentStep === 'info-alfandega';
         return (
-          <div className={`question-card ${animationClass}`} key="whatsapp">
-            <h2 className="question-title">{question.title}</h2>
-            {question.subtitle && (
-              <p className="question-subtitle">{question.subtitle}</p>
+          <div className={`question-card info-card ${animationClass}`} key={currentStep}>
+            {card.showWarningHeader && (
+              <div className="info-warning-header">
+                ⚠️ Leia antes de continuar
+              </div>
             )}
-            <PhoneInput
-              value={answers.whatsapp}
-              onChange={(value) => setAnswers((prev) => ({ ...prev, whatsapp: value }))}
-              error={errors.whatsapp}
-            />
+            <div className="info-icon">{card.icon}</div>
+            <div className="info-badge">{card.badge}</div>
+            <h2 className="info-title">{card.title}</h2>
+            <p className="info-body">{card.body}</p>
             <div className="nav-buttons">
               <button className="btn btn-back" onClick={handleBack} type="button" aria-label="Voltar">
                 <BackArrow />
@@ -440,17 +444,17 @@ export default function QuizContainer() {
               <button
                 className="btn btn-primary"
                 onClick={handleNext}
-                disabled={!isValid || isAnimating || isSubmitting}
+                disabled={isAnimating || isSubmitting}
                 type="button"
               >
-                {isSubmitting ? (
+                {isSubmitting && isLastInfo ? (
                   <>
                     <div className="spinner" />
                     Enviando...
                   </>
                 ) : (
                   <>
-                    Quero acesso
+                    {card.buttonLabel}
                     <NextArrow />
                   </>
                 )}
@@ -458,6 +462,7 @@ export default function QuizContainer() {
             </div>
           </div>
         );
+      }
 
       case 'final':
         return (

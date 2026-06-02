@@ -4,6 +4,47 @@
 
 import { QuizQuestion } from '@/types/quiz';
 
+export interface InfoCard {
+  icon: string;
+  badge: string;
+  title: string;
+  body: string;
+  buttonLabel: string;
+  showWarningHeader?: boolean;
+}
+
+export const infoCards: Record<string, InfoCard> = {
+  'info-origem': {
+    icon: '🏭',
+    badge: 'Origem do produto',
+    title: 'Nossa fábrica fica em Hong Kong.',
+    body: 'Não temos estoque no Brasil. Cada pedido sai direto da fábrica para o seu endereço. É exatamente por isso que conseguimos o preço que oferecemos.',
+    buttonLabel: 'Entendi',
+    showWarningHeader: true,
+  },
+  'info-frete': {
+    icon: '✈️',
+    badge: 'Frete fixo internacional',
+    title: 'US$ 75 fixos para qualquer cidade do Brasil.',
+    body: 'Esse valor já inclui envio expresso, rastreio e garantia de reenvio. Não importa de onde você é.',
+    buttonLabel: 'Entendi',
+  },
+  'info-prazo': {
+    icon: '📦',
+    badge: 'Prazo de envio',
+    title: 'Postamos em até 3 dias úteis após o pagamento.',
+    body: 'Você recebe o código de rastreio assim que o pacote sai, e nossa equipe acompanha o rastreio junto com você até a entrega, que leva cerca de 20 dias após o envio.',
+    buttonLabel: 'Entendi',
+  },
+  'info-alfandega': {
+    icon: '🛂',
+    badge: 'Alfândega e reembolso',
+    title: 'Chance de apreensão é muito baixa.',
+    body: 'Temos rotas dedicadas de envio que garantem a chegada do seu pedido. Apreensão acontece em menos de 5% dos casos. E se acontecer com o seu, a gente reenvia ou devolve o seu dinheiro. Sem enrolação.',
+    buttonLabel: 'Entendi a política de reembolso',
+  },
+};
+
 export const questions: Record<string, QuizQuestion> = {
   gate: {
     id: 'gate',
@@ -32,15 +73,6 @@ export const questions: Record<string, QuizQuestion> = {
     id: 'name',
     title: 'Como podemos te chamar?',
     type: 'text',
-    required: true,
-  },
-
-  whatsapp: {
-    id: 'whatsapp',
-    title: 'Qual o seu WhatsApp com DDD?',
-    subtitle:
-      'É por lá que vamos enviar a lista completa, fotos dos produtos, laudos e os preços diretos de fábrica.',
-    type: 'phone',
     required: true,
   },
 

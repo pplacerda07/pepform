@@ -1,10 +1,11 @@
 // ============================================================
 // FrostForm — Lógica de Roteamento do Funil
-// Novo fluxo: contato (nome + zap) vai para o FINAL
-// gate → profile → objectives/reseller → experience → name → whatsapp → final
+// Novo fluxo com educação pós-nome:
+// gate → profile → objectives|reseller → experience → name →
+// info-origem → info-frete → info-prazo → info-alfandega → final
 // ============================================================
 
-import { QuizStep, ProfileType, QuizAnswers } from '@/types/quiz';
+import { QuizStep, QuizAnswers } from '@/types/quiz';
 
 export function getNextStep(currentStep: QuizStep, answers: QuizAnswers): QuizStep {
   switch (currentStep) {
@@ -24,9 +25,18 @@ export function getNextStep(currentStep: QuizStep, answers: QuizAnswers): QuizSt
       return 'name';
 
     case 'name':
-      return 'whatsapp';
+      return 'info-origem';
 
-    case 'whatsapp':
+    case 'info-origem':
+      return 'info-frete';
+
+    case 'info-frete':
+      return 'info-prazo';
+
+    case 'info-prazo':
+      return 'info-alfandega';
+
+    case 'info-alfandega':
       return 'final';
 
     default:
@@ -36,31 +46,37 @@ export function getNextStep(currentStep: QuizStep, answers: QuizAnswers): QuizSt
 
 export function getPreviousStep(currentStep: QuizStep, answers: QuizAnswers): QuizStep | null {
   switch (currentStep) {
-    case 'gate':      return null;
-    case 'profile':   return 'gate';
-    case 'objectives':return 'profile';
-    case 'reseller':  return 'profile';
+    case 'gate':           return null;
+    case 'profile':        return 'gate';
+    case 'objectives':     return 'profile';
+    case 'reseller':       return 'profile';
     case 'experience':
       return answers.perfil === 'revendedor' ? 'reseller' : 'objectives';
-    case 'name':      return 'experience';
-    case 'whatsapp':  return 'name';
-    default:          return null;
+    case 'name':           return 'experience';
+    case 'info-origem':    return 'name';
+    case 'info-frete':     return 'info-origem';
+    case 'info-prazo':     return 'info-frete';
+    case 'info-alfandega': return 'info-prazo';
+    default:               return null;
   }
 }
 
-export function getProgress(currentStep: QuizStep, answers: QuizAnswers): number {
+export function getProgress(currentStep: QuizStep, _answers: QuizAnswers): number {
   const stepOrder: Record<string, number> = {
-    gate:        1,
-    profile:     2,
-    objectives:  3,
-    reseller:    3,
-    experience:  4,
-    name:        5,
-    whatsapp:    6,
-    final:       7,
-    rejected:    1,
+    gate:             1,
+    profile:          2,
+    objectives:       3,
+    reseller:         3,
+    experience:       4,
+    name:             5,
+    'info-origem':    6,
+    'info-frete':     7,
+    'info-prazo':     8,
+    'info-alfandega': 9,
+    final:            10,
+    rejected:         1,
   };
-  const total = 6;
+  const total = 9;
   const current = stepOrder[currentStep] || 1;
   return Math.min(Math.round((current / total) * 100), 100);
 }
@@ -73,25 +89,29 @@ export function validateStep(step: QuizStep, answers: QuizAnswers): boolean {
     case 'experience': return answers.experiencia !== '';
     case 'reseller':   return answers.operacao_revenda !== '';
     case 'name':       return answers.nome.trim().length >= 2;
-    case 'whatsapp': {
-      const digits = answers.whatsapp.replace(/\D/g, '');
-      return digits.length >= 10 && digits.length <= 11;
-    }
+    case 'info-origem':
+    case 'info-frete':
+    case 'info-prazo':
+    case 'info-alfandega':
+      return true;
     default: return true;
   }
 }
 
 export function getStepLabel(step: QuizStep): string {
   const labels: Record<QuizStep, string> = {
-    gate:        'Verificação',
-    profile:     'Seu perfil',
-    objectives:  'Objetivos',
-    experience:  'Experiência',
-    reseller:    'Sua operação',
-    name:        'Quase lá',
-    whatsapp:    'Contato',
-    final:       'Confirmação',
-    rejected:    '',
+    gate:             'Verificação',
+    profile:          'Seu perfil',
+    objectives:       'Objetivos',
+    experience:       'Experiência',
+    reseller:         'Sua operação',
+    name:             'Quase lá',
+    'info-origem':    'Como funciona',
+    'info-frete':     'Frete',
+    'info-prazo':     'Prazo',
+    'info-alfandega': 'Alfândega',
+    final:            'Confirmação',
+    rejected:         '',
   };
   return labels[step] || '';
 }

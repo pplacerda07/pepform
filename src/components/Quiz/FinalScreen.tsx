@@ -63,6 +63,12 @@ function buildWhatsAppMessage(answers: QuizAnswers): string {
   }
 
   lines.push('');
+  lines.push('Já li e entendi tudo sobre a operação:');
+  lines.push('▸ Fábrica em Hong Kong');
+  lines.push('▸ Frete fixo US$ 75');
+  lines.push('▸ Postagem em até 3 dias úteis, entrega em ~20 dias');
+  lines.push('▸ Política de reembolso/reenvio em caso de apreensão');
+  lines.push('');
   lines.push('Aguardo o contato com a lista e os preços.');
 
   return lines.join('\n');
@@ -90,11 +96,12 @@ export default function FinalScreen({ answers, onReject }: FinalScreenProps) {
   return (
     <div className="question-card animate-in">
       <div className="warning-screen">
-        <div className="warning-badge">ANTES DE CONTINUAR</div>
+        <div className="warning-badge">CONFIRMAÇÃO FINAL</div>
 
         <p className="warning-body">
-          Temos muitos clientes e nosso tempo é valioso. Respondemos dúvidas com prazer,
-          mas se você planeja ficar só curiosando, esse meio não é para você.
+          ✅ Você leu sobre origem, frete, prazo e alfândega.
+          Se está ciente e quer prosseguir, libere a conversa no WhatsApp abaixo.
+          Pedimos que vá em frente só se realmente tiver intenção de comprar.
         </p>
 
         <div className="warning-buttons">
