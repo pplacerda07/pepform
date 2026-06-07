@@ -157,6 +157,7 @@ export default function QuizContainer() {
   const [animationClass, setAnimationClass] = useState('animate-in');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [channel, setChannel] = useState<'A' | 'B'>('A');
 
   const progress = useMemo(() => getProgress(currentStep, answers), [currentStep, answers]);
   const stepLabel = useMemo(() => getStepLabel(currentStep), [currentStep]);
@@ -189,6 +190,10 @@ export default function QuizContainer() {
           body: JSON.stringify(payload),
         });
         const json = await resp.json();
+        if (json.channel === 'A' || json.channel === 'B') {
+          setChannel(json.channel);
+          console.log(`[FrostForm] Canal sorteado: ${json.channel}`);
+        }
         if (!resp.ok || !json.success) {
           console.error('[FrostForm] Falha na submissão:', json);
         } else {
@@ -197,6 +202,7 @@ export default function QuizContainer() {
             window.fbq('track', 'CompleteRegistration', {
               content_name: 'Frost Peptideos Form',
               content_category: answers.perfil,
+              content_id: `canal-${(json.channel || 'A').toLowerCase()}`,
             });
             console.log('[FrostForm] Meta Pixel: CompleteRegistration disparado');
           }
@@ -469,6 +475,7 @@ export default function QuizContainer() {
           <FinalScreen
             key="final"
             answers={answers}
+            channel={channel}
             onReject={() => {
               setIsAnimating(true);
               setAnimationClass('animate-out');

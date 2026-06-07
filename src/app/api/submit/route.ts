@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     const data: QuizAnswers = await request.json();
 
     // Validação básica dos campos obrigatórios
-    if (!data.nome || !data.whatsapp || !data.perfil || !data.intencao) {
+    if (!data.nome || !data.perfil || !data.intencao) {
       return NextResponse.json(
         { success: false, message: 'Campos obrigatórios ausentes' },
         { status: 400 }
@@ -35,20 +35,24 @@ export async function POST(request: NextRequest) {
 
     if (!sheetsResult.success) {
       console.error('Google Sheets error:', sheetsResult.error);
-      // Retorna sucesso pro usuário mesmo se falhar o Sheets
-      // Os dados já foram logados no servidor
+      // Retorna sucesso pro usuário mesmo se falhar o Sheets — com canal fallback
       return NextResponse.json(
-        { 
-          success: true, 
+        {
+          success: true,
+          channel: sheetsResult.channel,
           message: 'Formulário recebido (planilha temporariamente indisponível)',
-          sheetsError: sheetsResult.error 
+          sheetsError: sheetsResult.error,
         },
         { status: 200 }
       );
     }
 
     return NextResponse.json(
-      { success: true, message: 'Formulário recebido e salvo na planilha' },
+      {
+        success: true,
+        channel: sheetsResult.channel,
+        message: 'Formulário recebido e salvo na planilha',
+      },
       { status: 200 }
     );
   } catch (error) {

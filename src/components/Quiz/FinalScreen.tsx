@@ -8,7 +8,10 @@ declare global {
   }
 }
 
-const WHATSAPP_NUMBER = '556781082674';
+const WHATSAPP_NUMBERS: Record<'A' | 'B', string> = {
+  A: '556781082674',
+  B: '556731990990',
+};
 
 const PROFILE_LABELS: Record<string, string> = {
   uso_pessoal: 'Uso pessoal',
@@ -76,20 +79,23 @@ function buildWhatsAppMessage(answers: QuizAnswers): string {
 
 interface FinalScreenProps {
   answers: QuizAnswers;
+  channel: 'A' | 'B';
   onReject: () => void;
 }
 
-export default function FinalScreen({ answers, onReject }: FinalScreenProps) {
+export default function FinalScreen({ answers, channel, onReject }: FinalScreenProps) {
   const message = buildWhatsAppMessage(answers);
-  const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  const number = WHATSAPP_NUMBERS[channel];
+  const whatsappLink = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 
   const handleInterest = () => {
     if (typeof window !== 'undefined' && window.fbq) {
       window.fbq('track', 'Lead', {
         content_name: 'Frost Peptideos Form - Qualified',
         content_category: answers.perfil,
+        content_id: `canal-${channel.toLowerCase()}`,
       });
-      console.log('[FrostForm] Meta Pixel: Lead qualificado disparado');
+      console.log(`[FrostForm] Meta Pixel: Lead qualificado (Canal ${channel})`);
     }
   };
 

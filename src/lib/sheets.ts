@@ -15,6 +15,7 @@ import { QuizAnswers } from '@/types/quiz';
  * F: Experiência
  * G: Operação de Revenda
  * H: Intenção
+ * I: Canal (A | B) — round-robin baseado no número da linha
  */
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
@@ -104,17 +105,17 @@ export async function ensureSheetHeader(): Promise<void> {
   const sheets = google.sheets({ version: 'v4', auth });
   const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID!;
 
-  // Verificar se já tem dados
+  // Verificar se já tem header completo com 9 colunas
   const existing = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: 'A1:H1',
+    range: 'A1:I1',
   });
 
-  if (!existing.data.values || existing.data.values.length === 0) {
-    // Criar header
+  const headerRow = existing.data.values?.[0] || [];
+  if (headerRow.length < 9) {
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: 'A1:H1',
+      range: 'A1:I1',
       valueInputOption: 'RAW',
       requestBody: {
         values: [[
@@ -126,6 +127,7 @@ export async function ensureSheetHeader(): Promise<void> {
           'Experiência',
           'Operação Revenda',
           'Intenção',
+          'Canal',
         ]],
       },
     });
@@ -134,20 +136,34 @@ export async function ensureSheetHeader(): Promise<void> {
 
 /**
  * Envia as respostas do quiz para a planilha Google Sheets.
- * Retorna { success: true } ou { success: false, error: string }.
+ * Calcula o canal A/B com round-robin baseado na contagem de linhas.
+ * Sempre retorna um canal, mesmo em caso de erro (fallback aleatório).
  */
 export async function appendToSheet(
   data: QuizAnswers
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; channel: 'A' | 'B'; error?: string }> {
+  // Fallback caso a planilha falhe completamente
+  let channel: 'A' | 'B' = Math.random() < 0.5 ? 'A' : 'B';
+
   try {
     const auth = getAuth();
     const sheets = google.sheets({ version: 'v4', auth });
     const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID!;
 
-    // Garantir que o header existe
+    // Garantir que o header existe (9 colunas)
     await ensureSheetHeader();
 
-    // Montar a linha de dados
+    // Conta quantas linhas existem (incluindo header) para round-robin
+    const colA = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'A:A',
+    });
+    const totalRows = colA.data.values?.length || 1;
+    // totalRows = 1 → próximo lead será linha 2 (lead nº 1) → A
+    // totalRows = 2 → próximo lead será linha 3 (lead nº 2) → B
+    channel = totalRows % 2 === 1 ? 'A' : 'B';
+
+    // Montar a linha de dados (9 colunas)
     const row = [
       data.data_envio || new Date().toISOString(),
       data.nome,
@@ -157,11 +173,12 @@ export async function appendToSheet(
       formatExperience(data.experiencia),
       formatResellerOp(data.operacao_revenda),
       data.intencao === 'sim' ? 'Sim' : 'Não',
+      `Canal ${channel}`,
     ];
 
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: 'A:H',
+      range: 'A:I',
       valueInputOption: 'USER_ENTERED',
       insertDataOption: 'INSERT_ROWS',
       requestBody: {
@@ -169,11 +186,11 @@ export async function appendToSheet(
       },
     });
 
-    console.log('✅ Dados enviados para Google Sheets com sucesso');
-    return { success: true };
+    console.log(`✅ Dados enviados para Google Sheets (Canal ${channel})`);
+    return { success: true, channel };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erro desconhecido';
     console.error('❌ Erro ao enviar para Google Sheets:', message);
-    return { success: false, error: message };
+    return { success: false, channel, error: message };
   }
 }
